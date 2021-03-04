@@ -9,7 +9,10 @@ bool isEmpty(QUEUE* queue);
 void enqueue(QUEUE* queue,  NODE *item); 
 NODE* dequeue(QUEUE* queue); 
 NODE* front(QUEUE* queue); 
+
+void displayNode(NODE* iter);
 void display(QUEUE* queue, char name[]);
+
 QUEUE *sortQueueByArrivalTime(QUEUE* queue);
 QUEUE *sortQueueByPriority(QUEUE* queue);
 QUEUE *sortQueueByRemainingIOEndTime(QUEUE* queue);

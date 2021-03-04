@@ -23,6 +23,7 @@ NODE* makeNode(int PID, int arrival_time, int r_CPU_time, int IO_freq, int IO_du
 	p->pcb.burst_time = r_CPU_time;
 	p->pcb.wait_time = 0;
 	p->pcb.priority = priority;
+	p->pcb.memory = 150;
 	return p;
 }
 
@@ -35,6 +36,34 @@ void writeTransition(int tick, char oldState[], char newState[], NODE* p, FILE* 
 	fprintf(file_ptr,"%i %i %s %s\n", tick, p->pcb.PID, oldState, newState);
 }
 
+
+/*
+Writes the memory transitions
+*/
+void writeMemTransition(PARTITION *partitions, int num_partitions, int partition_index, FILE* file_ptr){
+	int total_memory_used = 0;
+	char used_partitions[] = "";
+	int total_memory_free = 0;
+	int total_memory_usable = 0;
+	
+	printf("Process Running in Partition: %i. Used Partitions: ", partition_index+1); 
+	fprintf(file_ptr,"Process Running in Partition: %i. Used Partitions: ", partition_index+1);
+	for (int i = 0; i < num_partitions; i++){
+		if (partitions[i].runningProcess != NULL){
+			printf("%i ",  partitions[i].id);
+			fprintf(file_ptr,"%i ",  partitions[i].id);
+			total_memory_used+= partitions[i].runningProcess->pcb.memory;
+			total_memory_free+=(partitions[i].memory - partitions[i].runningProcess->pcb.memory);
+		} else {
+			total_memory_free+=partitions[i].memory;
+			total_memory_usable+=partitions[i].memory;
+		}
+	}
+
+	printf(". Total Mem Used: %i. Total Mem Free: %i. Total Mem Usable: %d\n", total_memory_used, total_memory_free, total_memory_usable);
+	fprintf(file_ptr,". Total Mem Used: %i. Total Mem Free: %i. Total Mem Usable: %d\n", total_memory_used, total_memory_free, total_memory_usable);
+	//exit(0);
+}
 
 
 /*
@@ -94,8 +123,8 @@ void handleArrivalOfProcess(QUEUE* inputProcessList, QUEUE* readyQueue, int tick
 /*
 Simulates a CPU tick which runs a singular process called runningProcess
 */
-void runMainCPUTick(PARTITION* partitions, int size){
-	for (int i = 0; i < size; i++)
+void runMainCPUTick(PARTITION* partitions, int num_partitions){
+	for (int i = 0; i < num_partitions; i++)
 		if (partitions[i].runningProcess != NULL){
 			partitions[i].runningProcess->pcb.remaining_CPU_time--;
 			partitions[i].runningProcess->pcb.remaining_IO_start_time--;
@@ -116,8 +145,8 @@ void runIOCPUTick(QUEUE* waitingQueue){
 /*
 Calls the respective CPU tick functions
 */
-void handleTick(PARTITION* partitions, int size, QUEUE* waitingQueue){
-	runMainCPUTick(partitions, size);
+void handleTick(PARTITION* partitions, int num_partitions, QUEUE* waitingQueue){
+	runMainCPUTick(partitions, num_partitions);
 	runIOCPUTick(waitingQueue);
 }
 
@@ -164,13 +193,12 @@ void analysis(QUEUE* terminatedQueue, int totalTime, FILE* file_ptr){
 }
 
 
-bool areRunning(PARTITION *partitions, int size){
-	for (int i = 0; i < size; i++){
+bool areRunning(PARTITION *partitions, int num_partitions){
+	for (int i = 0; i < num_partitions; i++){
 		if (partitions[i].runningProcess != NULL){
 			return true;
 		}
 	}
-	
 	return false;
 }
 
@@ -179,27 +207,66 @@ int main(int argc, char *argv[]){
 
 	char inputFile[40], outputFile[40];
 
-	bool isRoundRobin = false, isPriority = false;
+	bool isRoundRobin = false, isPriority = false, isMem = false;
 	int roundRobinTicks = 3;
 	int remainingRoundRobinTicks = roundRobinTicks;
 
-	
-	//PARTITION* partitions;
+
+	PARTITION* partitions = NULL;
+	int num_partitions = 1;
 
 	if (argc>1){
 		strcpy(inputFile, argv[1]);
 		strcpy(outputFile, argv[2]);
 	
-		/*
 		if (strcmp(argv[3], "mem1") == 0){
-
-
+			num_partitions = 1;
+			PARTITION ps[num_partitions];
+			ps[0].memory = 999999;
+			ps[0].id = 1;
+			ps[0].runningProcess = NULL;
+			partitions = ps;
+			
 		} else if (strcmp(argv[3], "mem2") == 0){
+			num_partitions = 4;
+			PARTITION ps[num_partitions];
+			ps[0].memory = 500;
+			ps[1].memory = 250;
+			ps[2].memory = 150;
+			ps[3].memory = 100;
 
+			ps[0].id = 1;
+			ps[1].id = 2;
+			ps[2].id = 3;
+			ps[3].id = 4;	
+
+			ps[0].runningProcess = NULL;
+			ps[1].runningProcess = NULL;
+			ps[2].runningProcess = NULL;
+			ps[3].runningProcess = NULL;	
+			partitions = ps;
+			isMem = true;
 
 		} else if (strcmp(argv[3], "mem3") == 0){
+			num_partitions = 4;
+			PARTITION ps[num_partitions];
+			ps[0].memory = 300;
+			ps[1].memory = 300;
+			ps[2].memory = 350;
+			ps[3].memory = 50;
 
-		}*/
+			ps[0].id = 1;
+			ps[1].id = 2;
+			ps[2].id = 3;
+			ps[3].id = 4;	
+
+			ps[0].runningProcess = NULL;
+			ps[1].runningProcess = NULL;
+			ps[2].runningProcess = NULL;
+			ps[3].runningProcess = NULL;		
+			partitions = ps;
+			isMem = true;
+		}
 
 		if (strcmp(argv[4], "roundRobin") == 0){
 			isRoundRobin = true;
@@ -209,18 +276,35 @@ int main(int argc, char *argv[]){
 
 
 	} else { //for local execution
-		strcpy(inputFile, "inputRoundRobin2.txt");
-		strcpy(outputFile, "outputRoundRobin2.txt");
+		strcpy(inputFile, "inputFCFS1.txt");
+		strcpy(outputFile, "test.txt");
+		num_partitions = 4;
+
+		PARTITION ps[num_partitions];
+		ps[0].memory = 500;
+		ps[1].memory = 250;
+		ps[2].memory = 150;
+		ps[3].memory = 100;
+
+		ps[0].id = 1;
+		ps[1].id = 2;
+		ps[2].id = 3;
+		ps[3].id = 4;	
+
+		ps[0].runningProcess = NULL;
+		ps[1].runningProcess = NULL;
+		ps[2].runningProcess = NULL;
+		ps[3].runningProcess = NULL;		
+		partitions = ps;
+		isMem = true;
+
 		//isRoundRobin = true;
-		//isPriority = true;
+		//isPriority = true;*/
 	}
 
-	int size = 1;
-	PARTITION partitions[size];
-	partitions[0].memory = 99999;
-	partitions[0].runningProcess = NULL;
-
+	
 	FILE* outFilePtr = fopen(outputFile, "w");
+
 
 	QUEUE* inputProcessList = createInputProcessList(inputFile);
     QUEUE* readyQueue = createQueue(); 
@@ -230,10 +314,12 @@ int main(int argc, char *argv[]){
 	sortQueueByArrivalTime(inputProcessList);
 
 	int tick = 0;
-	for (; !isEmpty(readyQueue) || !isEmpty(waitingQueue) || areRunning(partitions, size) || !isEmpty(inputProcessList); tick++){
+
+	for (; !isEmpty(readyQueue) || !isEmpty(waitingQueue) || areRunning(partitions, num_partitions) || !isEmpty(inputProcessList); tick++){
 		handleArrivalOfProcess(inputProcessList, readyQueue, tick, outFilePtr);
 		
-		handleTick(partitions, size, waitingQueue);
+		handleTick(partitions, num_partitions, waitingQueue);
+	
 	
 		//CPU scheduler - see if process in waiting queue is finished processing
 		sortQueueByRemainingIOEndTime(waitingQueue);
@@ -244,7 +330,7 @@ int main(int argc, char *argv[]){
 		}
 
 		//see if running processes is terminated or needs IO CPU
-		for (int i = 0; i < size; i++){
+		for (int i = 0; i < num_partitions; i++){
 			if (partitions[i].runningProcess != NULL && partitions[i].runningProcess->pcb.remaining_CPU_time == 0){
 				writeTransition(tick, "RUNNING", "TERMINATED", partitions[i].runningProcess, outFilePtr);
 				enqueue(terminatedQueue, partitions[i].runningProcess);
@@ -296,16 +382,20 @@ int main(int argc, char *argv[]){
 				remainingRoundRobinTicks = roundRobinTicks;
 			}
 		}
-	
+		
+		//see if main CPU is idle and if there is a process waiting on the ready queue
+		for (int i = 0; i < num_partitions; i++){
+			if (partitions[i].runningProcess == NULL && !isEmpty(readyQueue)){
+
 	
 
-		//see if main CPU is idle and if there is a process waiting on the ready queue
-		for (int i = 0; i < size; i++){
-			if (partitions[i].runningProcess == NULL && !isEmpty(readyQueue)){
 				if (partitions[i].memory >= front(readyQueue)->pcb.memory){ //first fit algo
 					partitions[i].runningProcess = dequeue(readyQueue);
 					if (partitions[i].runningProcess != NULL){
 						writeTransition(tick, "READY", "RUNNING", partitions[i].runningProcess, outFilePtr);
+						if (isMem)
+							writeMemTransition(partitions, num_partitions, i, outFilePtr);
+
 						if (isRoundRobin)
 							remainingRoundRobinTicks = roundRobinTicks; //for use in roundrobin
 					}	

@@ -1,1 +1,9 @@
-KernelSimulator input2.txt output2.txt
+KernelSimulator input_CPU_Bound.txt false true false output_CPU_Bound_FCFS.txt mem1 FCFS
+KernelSimulator input_CPU_Bound.txt false true false output_CPU_Bound_RoundRobin.txt mem1 roundRobin
+KernelSimulator input_CPU_Bound.txt false true false output_CPU_Bound_Priority.txt mem1 priority
+KernelSimulator input_IO_Bound.txt true true false output_IO_Bound_FCFS.txt mem1 FCFS
+KernelSimulator input_IO_Bound.txt true true false output_IO_Bound_RoundRobin.txt mem1 roundRobin
+KernelSimulator input_IO_Bound.txt true true false output_IO_Bound_Priority.txt mem1 priority
+KernelSimulator input_CPU_IO_Bound.txt true true false output_CPU_IO_Bound_FCFS.txt mem1 FCFS
+KernelSimulator input_CPU_IO_Bound.txt true true false output_CPU_IO_Bound_RoundRobin.txt mem1 roundRobin
+KernelSimulator input_CPU_IO_Bound.txt true true false output_CPU_IO_Bound_Priority.txt mem1 priority

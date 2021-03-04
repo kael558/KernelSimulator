@@ -73,6 +73,19 @@ void display(QUEUE* queue, char name[])
 	return;
 }
 
+void displayNode(NODE* iter)
+{
+	printf("%i %i %i %i %i %i %i %i\n", 
+			iter->pcb.PID, 
+			iter->pcb.arrival_time, 
+			iter->pcb.remaining_CPU_time, 
+			iter->pcb.IO_start_time, 
+			iter->pcb.remaining_IO_start_time, 
+			iter->pcb.IO_end_time,
+			iter->pcb.remaining_IO_end_time, 
+			iter->pcb.priority);
+}
+
 QUEUE *sortQueueByArrivalTime(QUEUE* queue)
 {
 	for (NODE* iter1 = queue->head; iter1!=NULL; iter1 = iter1->prev){ 

@@ -34,6 +34,7 @@ typedef struct Queue {
 } QUEUE; 
 
 typedef struct Partition {
+	int id;
 	int memory;
 	NODE *runningProcess;
 } PARTITION;
