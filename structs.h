@@ -1,5 +1,5 @@
-﻿#ifndef STRUCTS_H_   
-#define STRUCTS_H_
+﻿#ifndef PROCESSES_H_   
+#define PROCESSES_H_
 
 
 typedef struct Processes {
@@ -20,12 +20,6 @@ typedef struct Processes {
 	int priority;
 } PCB;
 
-
-typedef struct Partition {
-	int total_memory;
-	NODE* runningProcess;
-} PARTITION;
-
 typedef struct Node {
 	struct Node *prev;
 	PCB pcb;
@@ -37,5 +31,9 @@ typedef struct Queue {
 	NODE *tail;
 } QUEUE; 
 
+typedef struct Partition {
+	int memory;
+	NODE *runningProcess;
+} PARTITION;
 
 #endif

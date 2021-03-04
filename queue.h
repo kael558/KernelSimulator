@@ -1,30 +1,19 @@
 ﻿#include <stdbool.h> 
-#include "processes.h"
+#include "structs.h"
 
 #ifndef QUEUE_H_   
 #define QUEUE_H_
 
-typedef struct Node {
-	struct Node *prev;
-	PCB pcb;
-} NODE;
+QUEUE *createQueue();
+bool isEmpty(QUEUE* queue);
+void enqueue(QUEUE* queue,  NODE *item); 
+NODE* dequeue(QUEUE* queue); 
+NODE* front(QUEUE* queue); 
+void display(QUEUE* queue, char name[]);
+QUEUE *sortQueueByArrivalTime(QUEUE* queue);
+QUEUE *sortQueueByPriority(QUEUE* queue);
+QUEUE *sortQueueByRemainingIOEndTime(QUEUE* queue);
 
-
-typedef struct Queue { 
-    NODE *head;
-	NODE *tail;
-} Queue; 
-
-Queue *createQueue();
-bool isEmpty(Queue* queue);
-void enqueue(Queue* queue,  NODE *item); 
-NODE* dequeue(Queue* queue); 
-NODE* front(Queue* queue); 
-void display(Queue* queue, char name[]);
-Queue *sortQueueByArrivalTime(Queue* queue);
-Queue *sortQueueByPriority(Queue* queue);
-Queue *sortQueueByRemainingIOEndTime(Queue* queue);
-
-int size(Queue* queue);
+int size(QUEUE* queue);
 
 #endif

@@ -5,8 +5,7 @@
 #include <stdlib.h>  
 #include <string.h>
 
-
-
+#define DNE -1;
 
 /*
 Creates the nodes consisting of a process which gets put into the initial queue
@@ -36,11 +35,13 @@ void writeTransition(int tick, char oldState[], char newState[], NODE* p, FILE* 
 	fprintf(file_ptr,"%i %i %s %s\n", tick, p->pcb.PID, oldState, newState);
 }
 
+
+
 /*
 Creates the inputProcessList which holds the processes until they reach the arrival time
 */
-Queue* createInputProcessList(char * filename){
-	Queue* inputProcessList = createQueue();
+QUEUE* createInputProcessList(char* filename){
+	QUEUE* inputProcessList = createQueue();
 	FILE *fp;
 	char str[100];
 
@@ -50,8 +51,7 @@ Queue* createInputProcessList(char * filename){
         exit(EXIT_FAILURE);
 	}
 	
-	int size = 6;
-	int pInfo[size];
+	int pInfo[6];
 
 	while (fgets(str, 100, fp) != NULL){
 		int i = 0;
@@ -61,15 +61,15 @@ Queue* createInputProcessList(char * filename){
 		}
 
 		if (i == 3){ //-IO, -priority
-			pInfo[3] = 999;
-			pInfo[4] = 0;
-			pInfo[5] = 0;
+			pInfo[3] = DNE;
+			pInfo[4] = DNE;
+			pInfo[5] = DNE;
 		} else if (i == 4){ //-IO, +priority
 			pInfo[5] = pInfo[3];
-			pInfo[3] = 999;
-			pInfo[4] = 0;
+			pInfo[3] = DNE;
+			pInfo[4] = DNE;
 		} else if (i == 5) { //+IO, -priority
-			pInfo[5] = 0;
+			pInfo[5] = DNE;
 		}
 
 		NODE* p = makeNode(pInfo[0], pInfo[1], pInfo[2], pInfo[3], pInfo[4], pInfo[5]);
@@ -85,7 +85,7 @@ Queue* createInputProcessList(char * filename){
 /*
 Checks if a process from the inputProcessList is ready to be placed into the queue
 */
-void handleArrivalOfProcess(Queue* inputProcessList, Queue* readyQueue, int tick, FILE* outFilePtr){
+void handleArrivalOfProcess(QUEUE* inputProcessList, QUEUE* readyQueue, int tick, FILE* outFilePtr){
 	while (!isEmpty(inputProcessList) && inputProcessList->head->pcb.arrival_time == tick){
 		enqueue(readyQueue, dequeue(inputProcessList));
 	}
@@ -94,15 +94,18 @@ void handleArrivalOfProcess(Queue* inputProcessList, Queue* readyQueue, int tick
 /*
 Simulates a CPU tick which runs a singular process called runningProcess
 */
-void runMainCPUTick(PCB* runningProcess){
-	runningProcess->remaining_CPU_time--;
-	runningProcess->remaining_IO_start_time--;
+void runMainCPUTick(PARTITION* partitions, int size){
+	for (int i = 0; i < size; i++)
+		if (partitions[i].runningProcess != NULL){
+			partitions[i].runningProcess->pcb.remaining_CPU_time--;
+			partitions[i].runningProcess->pcb.remaining_IO_start_time--;
+		}
 }
 
 /*
 Simulates the IO CPUs which process everything in the waitingQueue
 */
-void runIOCPUTick(Queue* waitingQueue){
+void runIOCPUTick(QUEUE* waitingQueue){
 	for (NODE* iter = waitingQueue->head; iter!=NULL; iter = iter->prev){ //IO CPUs
 		iter->pcb.remaining_IO_end_time--;
 	}
@@ -111,13 +114,10 @@ void runIOCPUTick(Queue* waitingQueue){
 /*
 Calls the respective CPU tick functions
 */
-void handleTick(NODE* runningProcess, Queue* waitingQueue){
-	if (runningProcess != NULL){
-		runMainCPUTick(&(runningProcess->pcb));
-	}
-	runIOCPUTick(waitingQueue);
+void handleTick(PARTITION* partitions, int size, QUEUE* waitingQueue){
+	runMainCPUTick(partitions, size);
+	//runIOCPUTick(waitingQueue);
 }
-
 
 /*
 calculates gcd between two numbers using euclids algo
@@ -136,7 +136,7 @@ int gcd(int n1, int n2){
 /*
 analyzes the processes in the terminated queue, printing the metrics
 */
-void analysis(Queue* terminatedQueue, int totalTime, FILE* file_ptr){
+void analysis(QUEUE* terminatedQueue, int totalTime, FILE* file_ptr){
 	int num_processes = size(terminatedQueue);
 
 	double turnaround = 0.0;
@@ -162,54 +162,76 @@ void analysis(Queue* terminatedQueue, int totalTime, FILE* file_ptr){
 }
 
 
+bool areRunning(PARTITION *partitions, int size){
+	for (int i = 0; i < size; i++){
+		if (partitions[i].runningProcess != NULL){
+			return true;
+		}
+	}
+	
+	return false;
+}
+
 
 int main(int argc, char *argv[]){ 
 
-	char inputFile[40] = "input", outputFile[40]="outputPriority";
+	char inputFile[40], outputFile[40];
 
 	bool isRoundRobin = false, isPriority = false;
-	int roundRobinTicks = 0;
-	int remainingRoundRobinTicks = 0;
+	int roundRobinTicks = 100;
+	int remainingRoundRobinTicks;
 
 	if (argc>1){
-		strcat(inputFile, argv[1]);
-		strcat(outputFile, argv[1]);
-		
-		if (strcmp(argv[2], "roundRobin") == 0){
+		strcpy(inputFile, argv[1]);
+		strcpy(outputFile, argv[2]);
+	
+
+		if (strcmp(argv[3], "mem1") == 0){
+
+
+		} else if (strcmp(argv[3], "mem2") == 0){
+
+
+		} else if (strcmp(argv[3], "mem3") == 0){
+
+		}
+
+		if (strcmp(argv[4], "roundRobin") == 0){
 			isRoundRobin = true;
-			roundRobinTicks = atoi(argv[3]);
-			remainingRoundRobinTicks = roundRobinTicks;
-		} else if (strcmp(argv[2], "priority") == 0){
+		} else if (strcmp(argv[4], "priority") == 0){
 			isPriority = true;
 		}
-	} else { //for local execution
-		char name[] = "CPUIOSharedBound.txt";
-		strcat(inputFile, name);
-		strcat(outputFile, name);
-		//isRoundRobin = true;
-		//roundRobinTicks = 100;
-		//remainingRoundRobinTicks = roundRobinTicks;
 
-		isPriority = true;
+
+	} else { //for local execution
+		strcpy(inputFile, "inputFCFS1.txt");
+		strcpy(outputFile, "out.txt");
+		//isRoundRobin = true;
+		//isPriority = true;
 	}
 
+	int size = 1;
+	PARTITION partitions[size];
+	partitions[0].memory = 99999;
+	partitions[0].runningProcess = NULL;
 
 	FILE* outFilePtr = fopen(outputFile, "w");
 
-	Queue* inputProcessList = createInputProcessList(inputFile);
-    Queue* readyQueue = createQueue(); 
-	Queue* waitingQueue = createQueue(); 
-	Queue* terminatedQueue = createQueue(); //for use in analysis
-	NODE* runningProcess = NULL;
+	QUEUE* inputProcessList = createInputProcessList(inputFile);
+    QUEUE* readyQueue = createQueue(); 
+	QUEUE* waitingQueue = createQueue(); 
+	QUEUE* terminatedQueue = createQueue(); //for use in analysis
+
+	
+	//NODE* runningProcess = NULL;
 	sortQueueByArrivalTime(inputProcessList);
 
 	int tick = 0;
-	for (; !isEmpty(readyQueue) || !isEmpty(waitingQueue) || runningProcess!=NULL || !isEmpty(inputProcessList); tick++){
-			
+	for (; !isEmpty(readyQueue) || !isEmpty(waitingQueue) || areRunning(partitions, size) || !isEmpty(inputProcessList); tick++){
 		handleArrivalOfProcess(inputProcessList, readyQueue, tick, outFilePtr);
-
-		handleTick(runningProcess, waitingQueue);
-
+			
+		handleTick(partitions, size, waitingQueue);
+	
 		//CPU scheduler - see if process in waiting queue is finished processing
 		sortQueueByRemainingIOEndTime(waitingQueue);
 		while (!isEmpty(waitingQueue) && waitingQueue->head->pcb.remaining_IO_end_time == 0){
@@ -218,17 +240,18 @@ int main(int argc, char *argv[]){
 			enqueue(readyQueue, dequeue(waitingQueue));
 		}
 
-		//see if current process is terminated or needs IO CPU
-		if (runningProcess != NULL){
-			if (runningProcess->pcb.remaining_CPU_time == 0){
-				writeTransition(tick, "RUNNING", "TERMINATED", runningProcess, outFilePtr);
-				enqueue(terminatedQueue, runningProcess);
-				runningProcess = NULL;
-			} else if (runningProcess->pcb.remaining_IO_start_time == 0){
-				writeTransition(tick, "RUNNING", "WAITING", runningProcess, outFilePtr);
-				runningProcess->pcb.remaining_IO_end_time = runningProcess->pcb.IO_end_time; 
-				enqueue(waitingQueue, runningProcess);
-				runningProcess = NULL;
+		//see if running processes is terminated or needs IO CPU
+		for (int i = 0; i < size; i++){
+
+			if (partitions[i].runningProcess != NULL && partitions[i].runningProcess->pcb.remaining_CPU_time == 0){
+				writeTransition(tick, "RUNNING", "TERMINATED", partitions[i].runningProcess, outFilePtr);
+				enqueue(terminatedQueue, partitions[i].runningProcess);
+				partitions[i].runningProcess = NULL;
+			} else if (partitions[i].runningProcess != NULL && partitions[i].runningProcess->pcb.remaining_IO_start_time == 0){
+				writeTransition(tick, "RUNNING", "WAITING", partitions[i].runningProcess, outFilePtr);
+				partitions[i].runningProcess->pcb.remaining_IO_end_time = partitions[i].runningProcess->pcb.IO_end_time; 
+				enqueue(waitingQueue, partitions[i].runningProcess);
+				partitions[i].runningProcess = NULL;
 			}
 		}
 
@@ -240,49 +263,49 @@ int main(int argc, char *argv[]){
 				//Better yet, add the process to appropriate index so it is already sorted. 
 				//sortQueueByPriority is more constructive though (don't have to alter existing code).
 				sortQueueByPriority(readyQueue); 
+				if (partitions[0].runningProcess != NULL){
+					if (readyQueue->head->pcb.priority < partitions[0].runningProcess->pcb.priority){
+						writeTransition(tick, "RUNNING", "READY", partitions[0].runningProcess, outFilePtr);
+						enqueue(readyQueue, partitions[0].runningProcess);
 
-				if (runningProcess != NULL){
-					if (readyQueue->head->pcb.priority < runningProcess->pcb.priority){
-						writeTransition(tick, "RUNNING", "READY", runningProcess, outFilePtr);
-						enqueue(readyQueue, runningProcess);
-
-						runningProcess = dequeue(readyQueue);
-						writeTransition(tick, "READY", "RUNNING", runningProcess, outFilePtr);
+						partitions[0].runningProcess = dequeue(readyQueue);
+						writeTransition(tick, "READY", "RUNNING", partitions[0].runningProcess, outFilePtr);
 					} 
 				} else { //handles the case for if there are multiple processes for tick 0, 
-					runningProcess = dequeue(readyQueue);
-					writeTransition(tick, "READY", "RUNNING", runningProcess, outFilePtr);
+					partitions[0].runningProcess = dequeue(readyQueue);
+					writeTransition(tick, "READY", "RUNNING", partitions[0].runningProcess, outFilePtr);
 
 				}
+		
 			}	
 		}
-
 
 		//if round robin is enabled, check if processes can "round-robined"
 		if (isRoundRobin){
 			remainingRoundRobinTicks--;
 			if (remainingRoundRobinTicks == 0){
-				if (!isEmpty(readyQueue) && runningProcess != NULL){
-					writeTransition(tick, "RUNNING", "READY", runningProcess, outFilePtr);
-					enqueue(readyQueue, runningProcess);
+				if (!isEmpty(readyQueue) && partitions[0].runningProcess != NULL){
+					writeTransition(tick, "RUNNING", "READY", partitions[0].runningProcess, outFilePtr);
+					enqueue(readyQueue, partitions[0].runningProcess);
 
-					runningProcess = dequeue(readyQueue);
-					writeTransition(tick, "READY", "RUNNING", runningProcess, outFilePtr);
+					partitions[0].runningProcess = dequeue(readyQueue);
+					writeTransition(tick, "READY", "RUNNING", partitions[0].runningProcess, outFilePtr);
 				}
 				remainingRoundRobinTicks = roundRobinTicks;
 
 			}
 		}
-
 	
 		//see if main CPU is idle and if there is a process waiting on the ready queue
-		if (runningProcess == NULL){
-			runningProcess = dequeue(readyQueue);
-			if (runningProcess != NULL){
-				writeTransition(tick, "READY", "RUNNING", runningProcess, outFilePtr);
-				if (isRoundRobin)
-					remainingRoundRobinTicks = roundRobinTicks; //for use in roundrobin
-			}	
+		for (int i = 0; i < size; i++){
+			if (partitions[i].runningProcess == NULL){
+				partitions[i].runningProcess = dequeue(readyQueue);
+				if (partitions[i].runningProcess != NULL){
+					writeTransition(tick, "READY", "RUNNING", partitions[i].runningProcess, outFilePtr);
+					if (isRoundRobin)
+						remainingRoundRobinTicks = roundRobinTicks; //for use in roundrobin
+				}	
+			}
 		}
 
 		
@@ -290,24 +313,6 @@ int main(int argc, char *argv[]){
 		for (NODE* iter = readyQueue->head; iter!=NULL; iter = iter->prev){
 			iter->pcb.wait_time++;
 		}
-
-		/*
-		printf("tick%d\n", tick);
-		printf("Running process:\n%i %i %i %i %i %i %i %i\n", 
-			runningProcess->pcb.PID, 
-			runningProcess->pcb.arrival_time, 
-			runningProcess->pcb.remaining_CPU_time, 
-			runningProcess->pcb.IO_start_time, 
-			runningProcess->pcb.remaining_IO_start_time, 
-			runningProcess->pcb.IO_end_time,
-			runningProcess->pcb.remaining_IO_end_time, 
-			runningProcess->pcb.priority);
-		display(readyQueue, "ready");
-		display(waitingQueue, "waiting");
-		display(terminatedQueue, "terminated");
-
-		if (tick > 3)
-			exit(0);*/
 
 	}
 
