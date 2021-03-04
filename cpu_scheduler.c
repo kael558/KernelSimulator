@@ -108,7 +108,9 @@ Simulates the IO CPUs which process everything in the waitingQueue
 void runIOCPUTick(QUEUE* waitingQueue){
 	for (NODE* iter = waitingQueue->head; iter!=NULL; iter = iter->prev){ //IO CPUs
 		iter->pcb.remaining_IO_end_time--;
+		iter->pcb.wait_time++;
 	}
+
 }
 
 /*
@@ -116,7 +118,7 @@ Calls the respective CPU tick functions
 */
 void handleTick(PARTITION* partitions, int size, QUEUE* waitingQueue){
 	runMainCPUTick(partitions, size);
-	//runIOCPUTick(waitingQueue);
+	runIOCPUTick(waitingQueue);
 }
 
 /*
@@ -178,14 +180,17 @@ int main(int argc, char *argv[]){
 	char inputFile[40], outputFile[40];
 
 	bool isRoundRobin = false, isPriority = false;
-	int roundRobinTicks = 100;
-	int remainingRoundRobinTicks;
+	int roundRobinTicks = 3;
+	int remainingRoundRobinTicks = roundRobinTicks;
+
+	
+	//PARTITION* partitions;
 
 	if (argc>1){
 		strcpy(inputFile, argv[1]);
 		strcpy(outputFile, argv[2]);
 	
-
+		/*
 		if (strcmp(argv[3], "mem1") == 0){
 
 
@@ -194,7 +199,7 @@ int main(int argc, char *argv[]){
 
 		} else if (strcmp(argv[3], "mem3") == 0){
 
-		}
+		}*/
 
 		if (strcmp(argv[4], "roundRobin") == 0){
 			isRoundRobin = true;
@@ -204,8 +209,8 @@ int main(int argc, char *argv[]){
 
 
 	} else { //for local execution
-		strcpy(inputFile, "inputFCFS1.txt");
-		strcpy(outputFile, "out.txt");
+		strcpy(inputFile, "inputRoundRobin2.txt");
+		strcpy(outputFile, "outputRoundRobin2.txt");
 		//isRoundRobin = true;
 		//isPriority = true;
 	}
@@ -222,14 +227,12 @@ int main(int argc, char *argv[]){
 	QUEUE* waitingQueue = createQueue(); 
 	QUEUE* terminatedQueue = createQueue(); //for use in analysis
 
-	
-	//NODE* runningProcess = NULL;
 	sortQueueByArrivalTime(inputProcessList);
 
 	int tick = 0;
 	for (; !isEmpty(readyQueue) || !isEmpty(waitingQueue) || areRunning(partitions, size) || !isEmpty(inputProcessList); tick++){
 		handleArrivalOfProcess(inputProcessList, readyQueue, tick, outFilePtr);
-			
+		
 		handleTick(partitions, size, waitingQueue);
 	
 		//CPU scheduler - see if process in waiting queue is finished processing
@@ -242,7 +245,6 @@ int main(int argc, char *argv[]){
 
 		//see if running processes is terminated or needs IO CPU
 		for (int i = 0; i < size; i++){
-
 			if (partitions[i].runningProcess != NULL && partitions[i].runningProcess->pcb.remaining_CPU_time == 0){
 				writeTransition(tick, "RUNNING", "TERMINATED", partitions[i].runningProcess, outFilePtr);
 				enqueue(terminatedQueue, partitions[i].runningProcess);
@@ -292,23 +294,26 @@ int main(int argc, char *argv[]){
 					writeTransition(tick, "READY", "RUNNING", partitions[0].runningProcess, outFilePtr);
 				}
 				remainingRoundRobinTicks = roundRobinTicks;
-
 			}
 		}
 	
+	
+
 		//see if main CPU is idle and if there is a process waiting on the ready queue
 		for (int i = 0; i < size; i++){
-			if (partitions[i].runningProcess == NULL){
-				partitions[i].runningProcess = dequeue(readyQueue);
-				if (partitions[i].runningProcess != NULL){
-					writeTransition(tick, "READY", "RUNNING", partitions[i].runningProcess, outFilePtr);
-					if (isRoundRobin)
-						remainingRoundRobinTicks = roundRobinTicks; //for use in roundrobin
-				}	
+			if (partitions[i].runningProcess == NULL && !isEmpty(readyQueue)){
+				if (partitions[i].memory >= front(readyQueue)->pcb.memory){ //first fit algo
+					partitions[i].runningProcess = dequeue(readyQueue);
+					if (partitions[i].runningProcess != NULL){
+						writeTransition(tick, "READY", "RUNNING", partitions[i].runningProcess, outFilePtr);
+						if (isRoundRobin)
+							remainingRoundRobinTicks = roundRobinTicks; //for use in roundrobin
+					}	
+				}
 			}
 		}
 
-		
+
 		//ready queue wait time for use in analysis
 		for (NODE* iter = readyQueue->head; iter!=NULL; iter = iter->prev){
 			iter->pcb.wait_time++;

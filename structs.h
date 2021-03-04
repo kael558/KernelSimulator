@@ -18,6 +18,8 @@ typedef struct Processes {
 	int burst_time;
 
 	int priority;
+
+	int memory;
 } PCB;
 
 typedef struct Node {

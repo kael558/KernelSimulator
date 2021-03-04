@@ -76,11 +76,11 @@
 70 5 WAITING READY
 70 5 READY RUNNING
 72 5 RUNNING TERMINATED
-id: 2 -- wait time: 28  --  burst_time: 11
-id: 4 -- wait time: 35  --  burst_time: 11
-id: 3 -- wait time: 40  --  burst_time: 12
-id: 1 -- wait time: 41  --  burst_time: 22
-id: 5 -- wait time: 38  --  burst_time: 14
+id: 2 -- wait time: 30  --  burst_time: 11
+id: 4 -- wait time: 37  --  burst_time: 11
+id: 3 -- wait time: 42  --  burst_time: 12
+id: 1 -- wait time: 46  --  burst_time: 22
+id: 5 -- wait time: 41  --  burst_time: 14
 Throughput: 5 processes per 72ms
-Avg Turnaround 50.400000
-Avg Wait 36.400000
+Avg Turnaround 53.200000
+Avg Wait 39.200000
