@@ -38,17 +38,14 @@ void writeTransition(int tick, char oldState[], char newState[], NODE* p, FILE* 
 /*
 Writes the memory transitions
 */
-void writeMemTransition(PARTITION *partitions, int num_partitions, int partition_index, FILE* file_ptr){
+void recordMem(PARTITION *partitions, int num_partitions, int* avg_mem_used, int* avg_free_mem, int* avg_usable_mem, int* n, FILE* file_ptr){
 	int total_memory_used = 0;
 	int total_memory_free = 0;
 	int total_memory_usable = 0;
 	
-	printf("%i | ", partition_index+1); 
-	fprintf(file_ptr,"%i | ", partition_index+1);
+	
 	for (int i = 0; i < num_partitions; i++){
 		if (partitions[i].runningProcess != NULL){
-			printf("%i ",  partitions[i].id);
-			fprintf(file_ptr,"%i ",  partitions[i].id);
 			total_memory_used+= partitions[i].runningProcess->pcb.memory;
 			total_memory_free+=(partitions[i].memory - partitions[i].runningProcess->pcb.memory);
 		} else {
@@ -57,8 +54,15 @@ void writeMemTransition(PARTITION *partitions, int num_partitions, int partition
 		}
 	}
 
-	printf("| %i %i %i\n", total_memory_used, total_memory_free, total_memory_usable);
-	fprintf(file_ptr,"| %i %i %i\n", total_memory_used, total_memory_free, total_memory_usable);
+
+	(*n)+=1;
+	int p = *n;
+	int x1 = *avg_mem_used;
+	int x2 = *avg_free_mem;
+	int x3 = *avg_usable_mem;
+	*avg_mem_used = ((x1 * (p - 1)) + total_memory_used)/ (p);
+	*avg_free_mem = ((x2 * (p - 1)) + total_memory_free)/ (p);
+	*avg_usable_mem = ((x3 * (p - 1)) + total_memory_usable)/ (p);
 }
 
 
@@ -165,6 +169,10 @@ int gcd(int n1, int n2){
 	return n1;
 }
 
+
+
+
+
 /*
 analyzes the processes in the terminated queue, printing the metrics
 */
@@ -194,6 +202,11 @@ void analysis(QUEUE* terminatedQueue, int totalTime, FILE* file_ptr){
 }
 
 
+void analysisMem(int* avg_mem_used, int* avg_free_mem, int* avg_usable_mem, FILE* file_ptr){
+	fprintf(file_ptr,"\nAvg Mem_Used %d\nAvg Free Mem %d\nAvg Mem Usable %d\n", *avg_mem_used, *avg_free_mem, *avg_usable_mem);
+}
+
+
 bool areRunning(PARTITION *partitions, int num_partitions){
 	for (int i = 0; i < num_partitions; i++){
 		if (partitions[i].runningProcess != NULL){
@@ -212,9 +225,10 @@ int main(int argc, char *argv[]){
 	int roundRobinTicks = 3;
 	int remainingRoundRobinTicks = roundRobinTicks;
 
-	
 	PARTITION* partitions = NULL;
 	int num_partitions = 1;
+
+	int avg_mem_used = 0, avg_free_mem = 0, avg_usable_mem = 0, n = 0;
 
 	if (argc>1){
 		strcpy(inputFile, argv[1]);
@@ -256,6 +270,7 @@ int main(int argc, char *argv[]){
 			ps[3].runningProcess = NULL;	
 			partitions = ps;
 			isMem = true;
+
 		} else if (strcmp(argv[6], "mem3") == 0){
 			num_partitions = 4;
 			PARTITION ps[num_partitions];
@@ -275,6 +290,7 @@ int main(int argc, char *argv[]){
 			ps[3].runningProcess = NULL;		
 			partitions = ps;
 			isMem = true;
+;
 		}
 
 		if (strcmp(argv[7], "roundRobin") == 0){
@@ -286,16 +302,27 @@ int main(int argc, char *argv[]){
 
 	} else { //for local execution
 
-		strcpy(inputFile, "inputs1/input_QuestionD.txt");
+		strcpy(inputFile, "inputs3/input_CPU_High_Mem.txt");
 		strcpy(outputFile, "test.txt");
-		num_partitions = 1;
-		PARTITION ps[num_partitions];
-		ps[0].memory = 999999;
-		ps[0].id = 1;
-		ps[0].runningProcess = NULL;
-		partitions = ps;
-		hasIO = true;
+		num_partitions = 4;
+			PARTITION ps[num_partitions];
+			ps[0].memory = 300;
+			ps[1].memory = 300;
+			ps[2].memory = 350;
+			ps[3].memory = 50;
 
+			ps[0].id = 1;
+			ps[1].id = 2;
+			ps[2].id = 3;
+			ps[3].id = 4;	
+
+			ps[0].runningProcess = NULL;
+			ps[1].runningProcess = NULL;
+			ps[2].runningProcess = NULL;
+			ps[3].runningProcess = NULL;		
+			partitions = ps;
+			isMem = true;
+		hasMemory = true;
 		//isRoundRobin = true;
 		//isPriority = true;*/
 	}
@@ -313,6 +340,7 @@ int main(int argc, char *argv[]){
 	int tick = 0;
 
 	for (; !isEmpty(readyQueue) || !isEmpty(waitingQueue) || areRunning(partitions, num_partitions) || !isEmpty(inputProcessList); tick++){
+		
 		handleArrivalOfProcess(inputProcessList, readyQueue, tick, outFilePtr);
 		
 		handleTick(partitions, num_partitions, waitingQueue);
@@ -391,7 +419,7 @@ int main(int argc, char *argv[]){
 					if (partitions[i].runningProcess != NULL){
 						writeTransition(tick, "READY", "RUNNING", partitions[i].runningProcess, outFilePtr);
 						if (isMem)
-							writeMemTransition(partitions, num_partitions, i, outFilePtr);
+							recordMem(partitions, num_partitions, &avg_mem_used, &avg_free_mem,  &avg_usable_mem, &n, outFilePtr);
 
 						if (isRoundRobin)
 							remainingRoundRobinTicks = roundRobinTicks; //for use in roundrobin
@@ -408,9 +436,12 @@ int main(int argc, char *argv[]){
 
 	}
 
+
 	analysis(terminatedQueue, tick-1, outFilePtr);
+	if (isMem)
+		analysisMem(&avg_mem_used, &avg_free_mem,  &avg_usable_mem, outFilePtr);
 
-
+		
 	fclose(outFilePtr);
 	return 0;
 }

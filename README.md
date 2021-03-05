@@ -1,3 +1,11 @@
+To see this readMe without all these lovely line breaks, go to the repo: https://github.com/kael558/KernelSimulator <br /> <br />
+
+This program simulates: <br />
+1.) Scheduling algorithms - FCFS, RoundRobin & Priority. <br />
+2.) Memory Management* - two different sets of partitions <br />
+<br />
+*NOTE: It was not explicity stated in the assignment 2 document that a process remains in memory while doing IO. Therefore, I assume that IO has it's own memory, similar to a disk, as in the first assignment. So when a process is doing IO, it allows another process to run in the partition that it left. <br />
+<br />
 **Bat Files** <br />
 test1.bat - simulates Part I. c). FCFS & Roundrobin and d). FCFS & Roundrobin - creates 4 output files <br />
 test2.bat - simulates all 3 scheduling algo's with all 6 input files (CPU, IO, CPU & IO bound 1 & 2) - creates 18 output files <br />
@@ -10,7 +18,7 @@ Input syntax: <br />
 "PID arrival burst IO_freq IO_duration priority memory" <br />
 *IO_freq, IO_duration, priority, memory all may be omitted if desired. <br />
 <br />
-Input examples: <br />
+Input examples: 
 1 0 20 4 1 1 200 //priority 1, memory req 200<br />
 2 0 20 4 1 2 250 //priority 2, memory req 250<br />
 <br />
@@ -22,12 +30,11 @@ Input examples: <br />
 Output filenames : output_____ <br />
 Output types: <br />
 1.) Transition - tick | pid | old_state | new_state <br />
-2.) MEM TRANSITION - partition_id | used_partitions | total_mem_used | total_mem_free | total_mem_usable  **IMPORTANT applies to memory section**<br />
 <br />
 **Memory** <br />
 Memory Partitions: <br />
-TODO: have files containing partition info which can be specified on program run <br />
-Tells the program which partitions of memory to be used in the simulation <br />
+TODO: have files containing partition info which can be specified on program run. E.g. load in mem1.txt which loads in those partition memory sizes<br />
+Tells the program which hardcoded partitions of memory to be used in the simulation <br />
 mem1 - 1 partition of "infinite" memory <br />
 mem2 - 4 partitions of 500, 250, 150, 100 (causes memory to be output)<br />
 mem3 - 4 partitions of 300, 300, 350, 50 (causes memory to be output)<br /> 

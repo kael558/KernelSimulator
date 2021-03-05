@@ -4,8 +4,8 @@
 		<category name="Window">
 			<property name="Left" type="integer">4294967288</property>
 			<property name="Top" type="integer">4294967265</property>
-			<property name="Right" type="integer">1701</property>
-			<property name="Bottom" type="integer">611</property>
+			<property name="Right" type="integer">1833</property>
+			<property name="Bottom" type="integer">825</property>
 			<property name="Maximized" type="integer">1</property>
 			<property name="Active" type="integer">1</property>
 		</category>
@@ -13,20 +13,20 @@
 	<category name="processes.h" />
 	<category name="queue.h">
 		<category name="Window">
-			<property name="Left" type="integer">156</property>
-			<property name="Top" type="integer">156</property>
-			<property name="Right" type="integer">1425</property>
-			<property name="Bottom" type="integer">732</property>
+			<property name="Left" type="integer">26</property>
+			<property name="Top" type="integer">26</property>
+			<property name="Right" type="integer">1046</property>
+			<property name="Bottom" type="integer">439</property>
 			<property name="Maximized" type="integer">0</property>
 			<property name="Active" type="integer">0</property>
 		</category>
 	</category>
 	<category name="queue.c">
 		<category name="Window">
-			<property name="Left" type="integer">130</property>
-			<property name="Top" type="integer">130</property>
-			<property name="Right" type="integer">1399</property>
-			<property name="Bottom" type="integer">706</property>
+			<property name="Left" type="integer">52</property>
+			<property name="Top" type="integer">52</property>
+			<property name="Right" type="integer">1072</property>
+			<property name="Bottom" type="integer">465</property>
 			<property name="Maximized" type="integer">0</property>
 			<property name="Active" type="integer">0</property>
 		</category>
@@ -34,10 +34,10 @@
 	<category name="test.c" />
 	<category name="structs.h">
 		<category name="Window">
-			<property name="Left" type="integer">1128</property>
-			<property name="Top" type="integer">0</property>
-			<property name="Right" type="integer">1692</property>
-			<property name="Bottom" type="integer">769</property>
+			<property name="Left" type="integer">78</property>
+			<property name="Top" type="integer">78</property>
+			<property name="Right" type="integer">1098</property>
+			<property name="Bottom" type="integer">491</property>
 			<property name="Maximized" type="integer">0</property>
 			<property name="Active" type="integer">0</property>
 		</category>
