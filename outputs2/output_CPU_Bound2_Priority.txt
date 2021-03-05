@@ -1,0 +1,33 @@
+0 2 READY RUNNING
+42 2 RUNNING TERMINATED
+42 5 READY RUNNING
+66 5 RUNNING TERMINATED
+66 1 READY RUNNING
+89 1 RUNNING TERMINATED
+89 3 READY RUNNING
+140 3 RUNNING TERMINATED
+140 9 READY RUNNING
+164 9 RUNNING TERMINATED
+164 4 READY RUNNING
+181 4 RUNNING TERMINATED
+181 10 READY RUNNING
+194 10 RUNNING TERMINATED
+194 8 READY RUNNING
+208 8 RUNNING TERMINATED
+208 6 READY RUNNING
+235 6 RUNNING TERMINATED
+235 7 READY RUNNING
+256 7 RUNNING TERMINATED
+id: 2 -- wait time: 0  --  burst_time: 42
+id: 5 -- wait time: 42  --  burst_time: 24
+id: 1 -- wait time: 66  --  burst_time: 23
+id: 3 -- wait time: 89  --  burst_time: 51
+id: 9 -- wait time: 140  --  burst_time: 24
+id: 4 -- wait time: 164  --  burst_time: 17
+id: 10 -- wait time: 181  --  burst_time: 13
+id: 8 -- wait time: 194  --  burst_time: 14
+id: 6 -- wait time: 208  --  burst_time: 27
+id: 7 -- wait time: 235  --  burst_time: 21
+Throughput: 10 processes per 256ms -> 5 processes per 128ms
+Avg Turnaround 157.500000
+Avg Wait 131.900000

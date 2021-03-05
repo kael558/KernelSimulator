@@ -5,12 +5,10 @@
 #include <stdlib.h>  
 #include <string.h>
 
-#define DNE -1;
-
 /*
 Creates the nodes consisting of a process which gets put into the initial queue
 */
-NODE* makeNode(int PID, int arrival_time, int r_CPU_time, int IO_freq, int IO_duration, int priority)
+NODE* makeNode(int PID, int arrival_time, int r_CPU_time, int IO_freq, int IO_duration, int priority, int memory)
 {
 	NODE *p = (NODE*) malloc(sizeof (NODE));
 	p->pcb.PID = PID;
@@ -23,7 +21,7 @@ NODE* makeNode(int PID, int arrival_time, int r_CPU_time, int IO_freq, int IO_du
 	p->pcb.burst_time = r_CPU_time;
 	p->pcb.wait_time = 0;
 	p->pcb.priority = priority;
-	p->pcb.memory = 150;
+	p->pcb.memory = memory;
 	return p;
 }
 
@@ -42,12 +40,11 @@ Writes the memory transitions
 */
 void writeMemTransition(PARTITION *partitions, int num_partitions, int partition_index, FILE* file_ptr){
 	int total_memory_used = 0;
-	char used_partitions[] = "";
 	int total_memory_free = 0;
 	int total_memory_usable = 0;
 	
-	printf("Process Running in Partition: %i. Used Partitions: ", partition_index+1); 
-	fprintf(file_ptr,"Process Running in Partition: %i. Used Partitions: ", partition_index+1);
+	printf("%i | ", partition_index+1); 
+	fprintf(file_ptr,"%i | ", partition_index+1);
 	for (int i = 0; i < num_partitions; i++){
 		if (partitions[i].runningProcess != NULL){
 			printf("%i ",  partitions[i].id);
@@ -60,16 +57,15 @@ void writeMemTransition(PARTITION *partitions, int num_partitions, int partition
 		}
 	}
 
-	printf(". Total Mem Used: %i. Total Mem Free: %i. Total Mem Usable: %d\n", total_memory_used, total_memory_free, total_memory_usable);
-	fprintf(file_ptr,". Total Mem Used: %i. Total Mem Free: %i. Total Mem Usable: %d\n", total_memory_used, total_memory_free, total_memory_usable);
-	//exit(0);
+	printf("| %i %i %i\n", total_memory_used, total_memory_free, total_memory_usable);
+	fprintf(file_ptr,"| %i %i %i\n", total_memory_used, total_memory_free, total_memory_usable);
 }
 
 
 /*
 Creates the inputProcessList which holds the processes until they reach the arrival time
 */
-QUEUE* createInputProcessList(char* filename){
+QUEUE* createInputProcessList(char* filename, bool hasIO, bool hasPriority, bool hasMemory){
 	QUEUE* inputProcessList = createQueue();
 	FILE *fp;
 	char str[100];
@@ -80,7 +76,7 @@ QUEUE* createInputProcessList(char* filename){
         exit(EXIT_FAILURE);
 	}
 	
-	int pInfo[6];
+	int pInfo[7] = {-1};
 
 	while (fgets(str, 100, fp) != NULL){
 		int i = 0;
@@ -89,21 +85,27 @@ QUEUE* createInputProcessList(char* filename){
 			pInfo[i++] = atoi(token);
 		}
 
-		if (i == 3){ //-IO, -priority
-			pInfo[3] = DNE;
-			pInfo[4] = DNE;
-			pInfo[5] = DNE;
-		} else if (i == 4){ //-IO, +priority
-			pInfo[5] = pInfo[3];
-			pInfo[3] = DNE;
-			pInfo[4] = DNE;
-		} else if (i == 5) { //+IO, -priority
-			pInfo[5] = DNE;
-		}
 
-		NODE* p = makeNode(pInfo[0], pInfo[1], pInfo[2], pInfo[3], pInfo[4], pInfo[5]);
+		if  (!hasIO && !hasPriority && hasMemory){
+			pInfo[6] = pInfo[3];
+			pInfo[3] = -1;
+		} else if  (!hasIO && hasPriority && !hasMemory){
+			pInfo[5] = pInfo[3];
+			pInfo[3] = -1;
+		} else if  (!hasIO && hasPriority && hasMemory){
+			pInfo[5] = pInfo[3];
+			pInfo[6] = pInfo[4];
+			pInfo[3] = -1;
+			pInfo[4] = -1;
+		} else if  (hasIO && !hasPriority && hasMemory){
+			pInfo[6] = pInfo[5];
+			pInfo[5] = -1;
+		} 
+
+		NODE* p = makeNode(pInfo[0], pInfo[1], pInfo[2], pInfo[3], pInfo[4], pInfo[5], pInfo[6]);
 
 		enqueue(inputProcessList, p);
+		
 	}
 	fclose(fp);
 
@@ -154,8 +156,7 @@ void handleTick(PARTITION* partitions, int num_partitions, QUEUE* waitingQueue){
 calculates gcd between two numbers using euclids algo
 */
 int gcd(int n1, int n2){
-	while(n1!=n2)
-    {
+	while(n1!=n2){
         if(n1 > n2)
             n1 -= n2;
         else
@@ -204,22 +205,31 @@ bool areRunning(PARTITION *partitions, int num_partitions){
 
 
 int main(int argc, char *argv[]){ 
+	char inputFile[100], outputFile[100];
 
-	char inputFile[40], outputFile[40];
-
-	bool isRoundRobin = false, isPriority = false, isMem = false;
+	bool isRoundRobin = false, isPriority = false, isMem = false; //for simulation
+	bool hasIO = false, hasPriority = false, hasMemory = false; //for input
 	int roundRobinTicks = 3;
 	int remainingRoundRobinTicks = roundRobinTicks;
 
-
+	
 	PARTITION* partitions = NULL;
 	int num_partitions = 1;
 
 	if (argc>1){
 		strcpy(inputFile, argv[1]);
-		strcpy(outputFile, argv[2]);
+
+		if (strcmp(argv[2], "true") == 0)
+			hasIO = true;
+		if (strcmp(argv[3], "true") == 0)
+			hasPriority = true;
+		if (strcmp(argv[4], "true") == 0)
+			hasMemory = true;
+		
+		
+		strcpy(outputFile, argv[5]);
 	
-		if (strcmp(argv[3], "mem1") == 0){
+		if (strcmp(argv[6], "mem1") == 0){
 			num_partitions = 1;
 			PARTITION ps[num_partitions];
 			ps[0].memory = 999999;
@@ -227,7 +237,7 @@ int main(int argc, char *argv[]){
 			ps[0].runningProcess = NULL;
 			partitions = ps;
 			
-		} else if (strcmp(argv[3], "mem2") == 0){
+		} else if (strcmp(argv[6], "mem2") == 0){
 			num_partitions = 4;
 			PARTITION ps[num_partitions];
 			ps[0].memory = 500;
@@ -246,8 +256,7 @@ int main(int argc, char *argv[]){
 			ps[3].runningProcess = NULL;	
 			partitions = ps;
 			isMem = true;
-
-		} else if (strcmp(argv[3], "mem3") == 0){
+		} else if (strcmp(argv[6], "mem3") == 0){
 			num_partitions = 4;
 			PARTITION ps[num_partitions];
 			ps[0].memory = 300;
@@ -268,35 +277,24 @@ int main(int argc, char *argv[]){
 			isMem = true;
 		}
 
-		if (strcmp(argv[4], "roundRobin") == 0){
+		if (strcmp(argv[7], "roundRobin") == 0){
 			isRoundRobin = true;
-		} else if (strcmp(argv[4], "priority") == 0){
+		} else if (strcmp(argv[7], "priority") == 0){
 			isPriority = true;
 		}
 
 
 	} else { //for local execution
-		strcpy(inputFile, "inputFCFS1.txt");
+
+		strcpy(inputFile, "inputs1/input_QuestionD.txt");
 		strcpy(outputFile, "test.txt");
-		num_partitions = 4;
-
+		num_partitions = 1;
 		PARTITION ps[num_partitions];
-		ps[0].memory = 500;
-		ps[1].memory = 250;
-		ps[2].memory = 150;
-		ps[3].memory = 100;
-
+		ps[0].memory = 999999;
 		ps[0].id = 1;
-		ps[1].id = 2;
-		ps[2].id = 3;
-		ps[3].id = 4;	
-
 		ps[0].runningProcess = NULL;
-		ps[1].runningProcess = NULL;
-		ps[2].runningProcess = NULL;
-		ps[3].runningProcess = NULL;		
 		partitions = ps;
-		isMem = true;
+		hasIO = true;
 
 		//isRoundRobin = true;
 		//isPriority = true;*/
@@ -305,8 +303,7 @@ int main(int argc, char *argv[]){
 	
 	FILE* outFilePtr = fopen(outputFile, "w");
 
-
-	QUEUE* inputProcessList = createInputProcessList(inputFile);
+	QUEUE* inputProcessList = createInputProcessList(inputFile, hasIO, hasPriority, hasMemory);
     QUEUE* readyQueue = createQueue(); 
 	QUEUE* waitingQueue = createQueue(); 
 	QUEUE* terminatedQueue = createQueue(); //for use in analysis

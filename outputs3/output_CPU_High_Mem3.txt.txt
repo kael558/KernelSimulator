@@ -1,0 +1,43 @@
+0 1 READY RUNNING
+1 | 1 | 280 720 700
+0 2 READY RUNNING
+2 | 1 2 | 330 670 400
+0 3 READY RUNNING
+3 | 1 2 3 | 670 330 50
+23 1 RUNNING TERMINATED
+23 4 READY RUNNING
+1 | 1 2 3 | 520 480 50
+40 4 RUNNING TERMINATED
+40 5 READY RUNNING
+1 | 1 2 3 | 650 350 50
+42 2 RUNNING TERMINATED
+42 6 READY RUNNING
+2 | 1 2 3 | 740 260 50
+42 7 READY RUNNING
+4 | 1 2 3 4 | 760 240 0
+51 3 RUNNING TERMINATED
+51 8 READY RUNNING
+3 | 1 2 3 4 | 740 260 0
+63 7 RUNNING TERMINATED
+64 5 RUNNING TERMINATED
+64 9 READY RUNNING
+1 | 1 2 3 | 630 370 50
+65 8 RUNNING TERMINATED
+65 10 READY RUNNING
+3 | 1 2 3 | 490 510 50
+69 6 RUNNING TERMINATED
+78 10 RUNNING TERMINATED
+88 9 RUNNING TERMINATED
+id: 1 -- wait time: 0  --  burst_time: 23
+id: 4 -- wait time: 23  --  burst_time: 17
+id: 2 -- wait time: 0  --  burst_time: 42
+id: 3 -- wait time: 0  --  burst_time: 51
+id: 7 -- wait time: 42  --  burst_time: 21
+id: 5 -- wait time: 40  --  burst_time: 24
+id: 8 -- wait time: 51  --  burst_time: 14
+id: 6 -- wait time: 42  --  burst_time: 27
+id: 10 -- wait time: 65  --  burst_time: 13
+id: 9 -- wait time: 64  --  burst_time: 24
+Throughput: 10 processes per 88ms -> 5 processes per 44ms
+Avg Turnaround 58.300000
+Avg Wait 32.700000

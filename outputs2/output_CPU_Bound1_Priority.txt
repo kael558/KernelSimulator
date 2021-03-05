@@ -1,0 +1,18 @@
+0 2 READY RUNNING
+42 2 RUNNING TERMINATED
+42 5 READY RUNNING
+66 5 RUNNING TERMINATED
+66 1 READY RUNNING
+89 1 RUNNING TERMINATED
+89 3 READY RUNNING
+140 3 RUNNING TERMINATED
+140 4 READY RUNNING
+157 4 RUNNING TERMINATED
+id: 2 -- wait time: 0  --  burst_time: 42
+id: 5 -- wait time: 42  --  burst_time: 24
+id: 1 -- wait time: 66  --  burst_time: 23
+id: 3 -- wait time: 89  --  burst_time: 51
+id: 4 -- wait time: 140  --  burst_time: 17
+Throughput: 5 processes per 157ms
+Avg Turnaround 98.800000
+Avg Wait 67.400000
