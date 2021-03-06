@@ -6,8 +6,8 @@ Note: Accidently submitted ide specific files. Files necessary to run bat files 
 * queue.c
 * queue.h
 * structs.h
-* input folders
-* output folders
+* inputs1, inputs2, inputs3 folders
+* outputs1, outputs2, outputs3 folders
 
 <br /> This program simulates: <br />
 1.) Scheduling algorithms - FCFS, RoundRobin & Priority. <br />
