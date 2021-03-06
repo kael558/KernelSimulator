@@ -6,6 +6,7 @@ Note: Accidently submitted ide specific files. Files necessary for you should ju
 * queue.c
 * queue.h
 * structs.h
+
 <br /> This program simulates: <br />
 1.) Scheduling algorithms - FCFS, RoundRobin & Priority. <br />
 2.) Memory Management* - two different sets of partitions <br />
