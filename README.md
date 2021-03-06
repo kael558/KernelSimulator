@@ -1,5 +1,11 @@
 To see this readMe without all these lovely line breaks, go to the repo: https://github.com/kael558/KernelSimulator <br /> <br />
 
+Note: Accidently submitted ide specific files. Files necessary for you should just be: <br />
+* KernelSimulator.exe
+* cpu_scheduler.c
+* queue.c
+* queue.h
+* structs.h
 This program simulates: <br />
 1.) Scheduling algorithms - FCFS, RoundRobin & Priority. <br />
 2.) Memory Management* - two different sets of partitions <br />
